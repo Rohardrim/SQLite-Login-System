@@ -1,0 +1,689 @@
+package logSql;
+
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.TextField;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.LinkedList;
+import java.util.List;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.table.DefaultTableModel;
+
+/*-----------------------------------------------------------------------------------------------------------
+ * 
+ * 
+ *  MAIN CLASS--------------------------------------------------------------------
+ * 
+ * 
+ * 
+*/
+
+
+public class Main extends JFrame implements ActionListener, KeyListener{
+	
+	private TextField t1;
+	private JButton b1, b2;
+	private JLabel e1, log, pass;
+	private JPasswordField t2;
+
+	List<User> l = new LinkedList<>();
+	
+	static Main m = new Main();
+	
+	public Main(){
+		
+		setSize(500, 500);
+		setTitle("Asura Martial Wars");
+		setLocation(1000, 150);
+		setResizable(false);
+		
+		setLayout(null);
+		
+		
+		t1 = new TextField();
+		t1.setBounds(150, 130, 200, 30);
+		add(t1);
+		
+		t2 = new JPasswordField();
+		t2.setBounds(150, 190, 200, 30);
+		t2.addKeyListener(this);
+		add(t2);
+		
+		b1 = new JButton("Zaloguj");
+		b1.setBounds(140, 260, 100, 30);
+		b1.addActionListener(this);
+		add(b1);
+		
+		b2 = new JButton("Zamknij");
+		b2.setBounds(260, 260, 100, 30);
+		b2.addActionListener(this);
+		add(b2);
+		
+		e1 = new JLabel("");
+		e1.setBounds(200, 340, 150, 30);
+		add(e1);
+		
+		log = new JLabel("Login:");
+		log.setBounds(90, 130, 60, 30);
+		add(log);
+		
+		pass = new JLabel("Password:");
+		pass.setBounds(67, 190, 70, 30);
+		add(pass);
+		
+		addKeyListener(this);
+	}
+
+	public void paint(Graphics g) {
+		// TODO Auto-generated method stub
+		super.paint(g);
+		
+		g.setColor(new Color(102, 102, 102));
+		g.setFont(new Font("Times New Roman", Font.BOLD, 30));
+		g.drawString("Asura Martial Wars", 130, 100);
+		
+	}
+	
+	
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		// TODO Auto-generated method stub
+		
+		Object s = e.getSource();
+		 
+		if(s == b1)
+			zaloguj();
+
+		
+		if(s == b2)
+			this.dispose();
+	}
+	
+	
+
+	@Override
+	public void keyTyped(KeyEvent e) {}
+
+	@Override
+	public void keyPressed(KeyEvent e) {
+		
+		if(e.getKeyCode() == KeyEvent.VK_ENTER)
+		zaloguj();
+		
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {}
+	
+	public void zaloguj(){
+		
+		if(t1.getText().length() > 0 && t2.getPassword().length > 0){
+			
+			
+			char[] c;
+		    c = t2.getPassword();
+			
+			String hash = "";
+			
+			for(int i=0; i<t2.getPassword().length; i++)
+				hash += c[i];
+			
+			sql sq = new sql();
+			
+			List<User> l = sq.SelectUsers();
+			
+			for(User p : l){
+				
+			if(t1.getText().equals(p.getNickname()) && hash.equals(p.getPassword()) && (p.getIsadm() == 0)){
+				
+			User u = new User(p.getNickname(), p.getID(), p.getIsadm());
+			
+			if(u.isShowing())
+				 m.setVisible(false);
+	
+				
+			e1.setVisible(false);
+			
+			}
+			else if(t1.getText().equals(p.getNickname()) && hash.equals(p.getPassword()) && (p.getIsadm() == 1)){
+				
+			User u = new User(p.getNickname(), p.getID(), p.getIsadm());
+			
+			if(u.isShowing())
+				 m.setVisible(false);
+	
+				
+			e1.setVisible(false);
+			}
+			else{
+				e1.setVisible(true);
+			     e1.setText("User nie istnieje");
+			}
+		  }
+			
+		}
+		else
+	       e1.setText("Zbyt krotki login lub haslo");	
+		
+	}
+	
+	/*-----------------------------------------------------------------------------------------------------------
+	 * 
+	 * 
+	 *  USER CLASS--------------------------------------------------------------------
+	 * 
+	 * 
+	 * 
+	*/
+
+	
+	class User extends JFrame implements ActionListener{
+
+		private int id, isadm, add_panel;
+		private String nickname, password;
+		private boolean f = false;
+		private JLabel et1;
+		private JButton b1, b2, ad, panel2, del_user;
+		private JMenuItem opis, adduser, profil;
+		private JComboBox<String> cb;
+		private JTextField log, hass;
+		private JTabbedPane tp;
+		private JPanel second;
+		private JTable t;
+		private DefaultTableModel model;
+		private int ilosc = 0;
+		private boolean reset = false;
+		
+		
+		public User(String user, int iden, int adm){
+			
+			setSize(500, 500);
+			setVisible(true);
+			setLocation(600, 160);
+			
+			if(adm == 0)
+			setTitle("Asura Martial Wars");
+			else
+			setTitle("AdminPanel");
+			
+			setResizable(false);
+			
+			setLayout(null);
+			
+			et1 = new JLabel("Witaj uzytkowniku "+ user + "!");
+			et1.setBounds(50, 50, 160, 30);
+			add(et1);
+			
+			b1 = new JButton("Close");
+			b1.setBounds(200, 270, 80, 30);
+			b1.addActionListener(this);
+			add(b1);
+			
+			b2 = new JButton("Back");
+			b2.setBounds(300, 300, 80, 30);
+			b2.setVisible(false);
+			b2.addActionListener(this);
+			add(b2);
+			
+			JMenuBar mb;
+			JMenu m;
+			
+			mb = new JMenuBar();
+			mb.setBounds(0, 0, 490, 30);
+			add(mb);
+			
+			m = new JMenu("User");
+			mb.add(m);
+			
+			profil = new JMenuItem("Profil");
+			profil.addActionListener(this);
+			m.add(profil);
+			
+			opis = new JMenuItem("O Grze");
+			opis.addActionListener(this);
+			m.add(opis);
+			
+			add_panel = adm;
+			
+			if(adm == 1){
+				
+				adduser = new JMenuItem("Add User");
+				adduser.addActionListener(this);
+				m.add(adduser);
+				
+			}
+			
+		}
+		
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			// TODO Auto-generated method stub
+			sql p = new sql();
+			
+			Object s = e.getSource();
+			
+			if(s == b1){
+				
+				this.dispose();
+				
+				if(this.isShowing() == false)
+					m.setVisible(true);
+			}
+			else if(s == opis){
+				
+				JOptionPane.showMessageDialog(null, "Versia 1.0");
+				
+			}
+			else if(s == profil){
+				
+				f = true;
+				et1.setVisible(false);
+				b1.setVisible(false);
+				b2.setVisible(true);
+				
+				repaint();
+			}
+			else if(s == b2){
+				
+				f = false;
+				et1.setVisible(true);
+				b1.setVisible(true);
+				b2.setVisible(false);
+				
+				if(add_panel == 1){
+					if(tp.isVisible()){
+						tp.setVisible(false);
+						panel2.setVisible(false);
+						del_user.setVisible(false);
+						reset = false;
+						p.ConClose();
+					}
+				}
+				
+				repaint();
+	
+			}
+			else if(s == cb){
+				
+				String nam = cb.getSelectedItem().toString();
+				
+				if(nam.equals("Admin"))
+				  isadm = 1;
+				if(nam.equals("User"))
+					isadm = 0;
+			}
+			
+			else if(s == adduser){
+				
+				et1.setVisible(false);
+			    b1.setVisible(false);
+			    b2.setBounds(200, 420, 80, 30);
+			    b2.setVisible(true);
+			    
+			    tp = new JTabbedPane();
+			    tp.setBounds(10, 40, 480, 350);
+			    
+			    JPanel first = new JPanel();
+			    first.setLayout(null);
+			    second = new JPanel();
+			    second.setLayout(null);
+			    
+			    tp.addTab("Add User", first);
+			    tp.addTab("Users List", second);
+			    
+			    add(tp);
+			    
+			    log = new JTextField();
+				log.setBounds(100, 50, 100, 40);
+				first.add(log);
+				
+				hass = new JTextField();
+				hass.setBounds(100, 100, 100, 40);
+				first.add(hass);
+				
+				ad = new JButton("Add");
+				ad.setBounds(220, 120, 100, 30);
+				ad.addActionListener(this);
+				first.add(ad);
+				
+				second.setLayout(new FlowLayout());
+				String[] columns = {"Iduser" ,"Isadm" ,"Nickname"};
+				
+				model = new DefaultTableModel(columns, 0);
+				
+				
+				t = new JTable(model);
+				
+				
+				JScrollPane sp = new JScrollPane(t);
+				second.add(sp);
+				
+				
+				
+				panel2 = new JButton("Refresh");
+				panel2.setBounds(340, 400, 80, 20);
+				panel2.addActionListener(this);
+				add(panel2);
+				
+				del_user = new JButton("Delete User");
+				del_user.setBounds(340, 430, 100, 20);
+				del_user.addActionListener(this);
+				add(del_user);
+				
+				cb = new JComboBox<>();
+				cb.setBounds(100, 150, 100, 30);
+				cb.addItem("Admin");
+				cb.addItem("User");
+				cb.addActionListener(this);
+				first.add(cb);
+			}
+			else if(s == ad){
+				
+				String login = log.getText();
+				String pass = hass.getText();
+				boolean isuser = false;
+				
+				sql sq = new sql();
+				
+				List<User> l = sq.SelectUsers();
+				
+				for(User m : l){
+					String v = m.getNickname();
+					
+					if(login.equals(v)){
+						isuser = true;
+						break;
+					}
+					else
+						isuser = false;
+				}
+
+				if(!isuser){
+				
+					if(log.getText().length() > 0 && hass.getText().length() > 0){
+							
+						sq.InsertUser(isadm, login, pass);
+						
+						JOptionPane.showMessageDialog(null, "The user is added");
+					}
+				}	
+				else
+					JOptionPane.showMessageDialog(null, "The user name is taken");
+			}
+			else if(s == panel2){
+	
+				refreshTable();
+				setTable();
+				
+			}
+			else if(s == del_user){
+				
+				int a = t.getSelectedRow();
+				
+				Object id = t.getValueAt(a, 0);
+				
+				int intId = (int) id;
+				
+				Object b = t.getValueAt(a, 1);
+				
+				int c = (int) b;
+				
+				sql sq = new sql();
+				
+				sq.DeleteUser(intId, c);
+				
+				
+			}
+		
+			
+		}
+		
+		public void setTable(){
+			
+			sql s = new sql();
+
+			List<User> l = s.SelectUsers();
+			
+			for(User u : l){
+				
+				model.addRow(new Object[] {u.getID(), u.getIsadm(), u.getNickname()});
+				ilosc++;
+			}
+			reset = true;
+		}
+		
+		public void refreshTable()
+		{
+			if(reset)
+			{
+				for(int i=0; i<t.getRowCount(); i++){
+				model.removeRow(i);
+				i--;
+				}
+			}
+		}
+			
+		
+		
+		public void paint(Graphics g){
+			
+			super.paint(g);
+			
+			if(f){
+			g.drawLine(10, 100, 450, 100);
+			g.drawLine(10, 200, 450, 200);
+			}
+			
+			
+
+		}
+		
+		public User(int id, int isadm, String nickname, String password){
+			this.id = id;
+			this.nickname = nickname;
+			this.password = password;
+			this.isadm = isadm;
+		}
+		
+		public int getID(){
+			return id;
+		}
+		
+		public String getNickname(){
+			return nickname;
+		}
+		
+		public String getPassword(){
+			return password;
+		}
+		
+		public int getIsadm(){
+			return isadm;
+		}
+		
+		
+	}
+	
+	/*-----------------------------------------------------------------------------------------------------------
+	 * 
+	 * 
+	 *	SQL CLASS------------------------------------------------------------ 
+	 *
+	 *
+	*/
+	
+	class sql{
+		
+		private Connection con;
+		private Statement stat;
+		
+		public sql(){
+		
+		try {
+			
+			Class.forName("org.sqlite.JDBC");
+			
+		} catch (ClassNotFoundException e) {
+			System.out.println("Can not load controler: "+e.getMessage());
+		}
+		
+		try {
+			
+			con = DriverManager.getConnection("jdbc:sqlite:base.db");
+			stat = con.createStatement();
+
+		} catch (SQLException e) {
+			System.out.println("Can not connect to base: "+e.getMessage());
+		}
+		
+		CreateTables();
+	
+	}
+	
+	public boolean CreateTables(){
+		
+		String createUsers = "create table if not exists users(iduser Integer primary key autoincrement, isadm Integer, login varchar(20), password varchar(20))";
+		
+		try {
+			stat.execute(createUsers);
+		} catch (SQLException e) {
+			System.out.println("Can not create table: "+e.getMessage());
+			return false;
+		}
+		return true;
+	}
+		
+		public boolean InsertUser(int isadm, String login, String password){
+			
+			try {
+				
+				PreparedStatement ps = con.prepareStatement("insert into users values(NULL, ?, ?, ?)");
+				ps.setInt(1, isadm);
+				ps.setString(2, login);
+				ps.setString(3, password);
+				ps.execute();
+				
+			} catch (SQLException e) {
+				System.out.println("Can not insert user: "+e.getMessage());
+				return false;
+			}
+			
+			return true;
+		}
+		
+		public List<User> SelectUsers(){
+			
+			LinkedList<User> l = new LinkedList<>();
+			int id, isadm;
+			String log, pass;
+			
+			try {
+				
+				ResultSet rs = stat.executeQuery("select * from users");
+				
+				while(rs.next()){
+					
+					id = rs.getInt("iduser");
+					isadm = rs.getInt("isadm");
+					log = rs.getString("login");
+					pass = rs.getString("password");
+					l.add(new User(id, isadm, log, pass));
+				}
+				
+			} catch (SQLException e) {
+				System.out.println("Can not display users: "+e.getMessage());
+			}
+			
+			return l;
+			
+		}
+		
+		public boolean DeleteUser(int setRow, int adm){
+			
+			if(adm == 0)
+			{
+			try {
+				
+				PreparedStatement st = con.prepareStatement("delete from users where iduser = ?");
+				st.setInt(1, setRow);
+				st.execute();
+				
+			} catch (SQLException e) {
+				System.out.println("Can not delete user: "+e.getMessage());
+				return false;
+			}
+			}
+			else
+			JOptionPane.showMessageDialog(null, "Can not delete admin");
+			
+			JOptionPane.showMessageDialog(null, "User is deleted");
+
+			return true;
+			
+		}
+		
+		public void ConClose(){
+			
+			try {
+				con.close();
+			} catch (SQLException e) {
+				System.out.println("Can not close connection");
+			}
+		}
+		
+		
+	}
+	
+
+	/*-----------------------------------------------------------------------------------------------------------
+	 * 
+	 * 
+	 *  MAIN METHOD--------------------------------------------------------------------
+	 * 
+	 * 
+	 * 
+	*/
+	
+	public static void main(String[] args) {
+		
+		//Main m = new Main();
+		m.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		m.setVisible(true);
+
+		Main lp = new Main();
+		
+		sql s = lp.new sql();
+		
+	
+	}
+
+}
+
+
+
